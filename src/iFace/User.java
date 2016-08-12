@@ -69,8 +69,73 @@ public class User {
 		this.requests.remove(0);
 		return aux;
 	}
-	public void removeFriend(){
-		//
+	private void noFriend(User user){
+		for(int i=0; i<this.friends.size(); i++){
+			if(this.friends.get(i) == user){
+				this.friends.remove(i);
+				break;
+			}
+		}
+	}
+	public void removeFriend(User user){
+		user.noFriend(this);
+		this.noFriend(user);
+	}
+	public void clearFriends(){
+		while(this.friends.size() >0){
+			this.removeFriend(this.friends.get(0));
+		}
+	}
+	public int searchFriend(String name){
+		for(int i=0; i<this.friends.size(); i++){
+			if(this.friends.get(i).name.equals(name)){
+				return i;
+			}
+		}
+		return -1;
+	}
+	public User friendAt(int index){
+		return this.friends.get(index);
+	}
+	public void showCommunities(){
+		System.out.println("Comunidades");
+		for(int i=0; i<this.communities.size(); i++){
+			this.communities.get(i).showInfo();
+			System.out.println("\n");
+		}
+	}
+	public void joinCommunity(Community c){
+		this.communities.add(c);
+	}
+	public void exitCommunity(Community c){
+		for(int i=0; i<this.communities.size(); i++){
+			if(this.communities.get(i) == c){
+				this.communities.remove(i);
+				break;
+			}
+		}
+	}
+	public void removeCommunity(Community c){
+		c.removeMember(this);
+	}
+	public void clearCommunities(){
+		while(this.communities.size() >0){
+			this.removeCommunity(this.communities.get(0));
+		}
+	}
+	public void showMessages(){
+		for (int i=0; i<this.messages.size() ; i++){
+			System.out.println("----------------------------------");
+			this.messages.get(i).show();
+			System.out.println("\n");
+		}
+	}
+	public void sendMessage(Message message){
+		this.messages.add(message);
+	}
+	public boolean isFriend(String name){
+		if(this.searchFriend(name) == -1) return false;
+		return true;
 	}
 	
 	public String getEmail() {
