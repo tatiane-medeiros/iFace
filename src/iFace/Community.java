@@ -13,6 +13,8 @@ public class Community {
 		this.name = name;
 		this.admin = admin;
 		this.members = new ArrayList<>();
+		this.requests = new ArrayList<>();
+		this.messages = new ArrayList<>();
 		this.addMember(admin);
 	}
 	void setDescription(String description){
@@ -61,11 +63,16 @@ public class Community {
 		}
 	}
 	public void addRequest(User user){
-		Message msg = new Message(user, this.admin,"Quer participar da comunidade.");
-		this.requests.add(msg);
+		
+		this.requests.add(new Message(user, null, "Quer participar da comunidade."));
 	}
 	public void receiveMessage(Message message){
 		this.messages.add(message);
+	}
+	public void showMessages(){
+		for(int i = 0; i<this.messages.size(); i++){
+			this.messages.get(i).show();
+		}
 	}
 	
 	public boolean isMember(User user){
@@ -89,6 +96,10 @@ public class Community {
 		String data = name+"\r\n"+description+"\r\n"+members.size();
 		for(int i=0;i<members.size(); i++){
 			data = data.concat("\r\n"+members.get(i).getName());
+		}
+		data = data.concat("\r\n"+messages.size());
+		for(int i=0;i<messages.size(); i++){
+			data = data.concat("\r\n"+messages.get(i).toString());
 		}
 		return data;
 	}

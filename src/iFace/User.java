@@ -5,6 +5,7 @@ public class User {
 	private String name;
 	private String email;
 	private String password;
+	int id;
 	private ArrayList<User> friends;
 	private ArrayList<Message> messages;
 	private ArrayList<Community> communities;
@@ -34,7 +35,7 @@ public class User {
 			this.password = newPass;
 			System.out.println("Senha alterada com sucesso!");
 		}
-		else System.out.println("Senha incorreta.");
+		else System.err.println("Senha incorreta.\n");
 	}
 	
 	public void print(){
@@ -45,6 +46,7 @@ public class User {
 	}
 	
 	public void listFriends(){
+		if(this.friends.size() == 0) System.out.println("Nenhum amigo.");
 		for(int i=0; i<this.friends.size(); i++){
 			System.out.println(this.friends.get(i).getName());
 		}
@@ -53,12 +55,15 @@ public class User {
 	public void request(User user){
 		this.requests.add(new Message(user, this, "Enviou uma solicitação de amizade."));
 	}
-	private void newFriend(User user){
+	protected void newFriend(User user){
 		this.friends.add(user);
 	}
 	public void addFriend(User user){
-		this.newFriend(user);
-		user.newFriend(this);
+		if(!this.isFriend(user)){
+			this.newFriend(user);
+			user.newFriend(this);
+		}
+		
 	}
 	public boolean hasRequest(){
 		return (this.requests.size() >0);
@@ -69,17 +74,20 @@ public class User {
 		this.requests.remove(0);
 		return aux;
 	}
-	private void noFriend(User user){
+	private void noFriend(User user) throws IndexOutOfBoundsException{
 		for(int i=0; i<this.friends.size(); i++){
 			if(this.friends.get(i) == user){
 				this.friends.remove(i);
 				break;
 			}
-		}
+		}		
 	}
 	public void removeFriend(User user){
+		if(this.isFriend(user)){
 		user.noFriend(this);
 		this.noFriend(user);
+		}
+		else throw new NullPointerException("Este usuario não está na sua lista de amigos.\n");
 	}
 	public void clearFriends(){
 		while(this.friends.size() >0){
@@ -94,14 +102,21 @@ public class User {
 		}
 		return -1;
 	}
+	public String fprintFriends(){
+		String aux = ""+this.friends.size();
+		for(int i=0; i<this.friends.size();i++){
+			aux = aux.concat("\r\n"+this.friends.get(i).getName());
+		}
+		return aux;
+	}
 	public User friendAt(int index){
 		return this.friends.get(index);
 	}
 	public void showCommunities(){
-		System.out.println("Comunidades");
+		System.out.println(this.communities.size()+" comunidades:\n");
 		for(int i=0; i<this.communities.size(); i++){
-			this.communities.get(i).showInfo();
-			System.out.println("\n");
+			Community curr =this.communities.get(i);
+			System.out.println(curr.getName()+"\n"+curr.description+"\nMembros: "+curr.nOfMembers()+"\n");
 		}
 	}
 	public void joinCommunity(Community c){
@@ -124,20 +139,38 @@ public class User {
 		}
 	}
 	public void showMessages(){
-		for (int i=0; i<this.messages.size() ; i++){
-			System.out.println("----------------------------------");
+		for (int i=0; i<this.messages.size(); i++){
 			this.messages.get(i).show();
-			System.out.println("\n");
+			//System.out.println("\n");
 		}
 	}
 	public void sendMessage(Message message){
 		this.messages.add(message);
 	}
+	public String fprintMessageBox(){
+		String aux = messages.size()+"";
+		int i;
+		for(i = 0; i< messages.size(); i++){
+			aux = aux.concat(messages.get(i).toSave());
+		}
+		aux = aux.concat("\r\n"+requests.size());
+		for(i = 0; i< requests.size(); i++){
+			aux = aux.concat("\r\n"+requests.get(i).getOrigination().getName());
+		}
+			
+		
+		return aux;
+	}
 	public boolean isFriend(String name){
 		if(this.searchFriend(name) == -1) return false;
 		return true;
 	}
-	
+	public boolean isFriend(User user){
+		for(int i=0; i<friends.size(); i++){
+			if(friends.get(i) == user) return true;
+		}
+		return false;
+	}
 	public String getEmail() {
 		return email;
 	}
