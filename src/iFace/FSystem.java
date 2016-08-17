@@ -52,19 +52,12 @@ public class FSystem {
 		nEmail = sc.next();
 		int aux = this.searchByEmail(nEmail);
 		System.out.println("Digite sua senha:");
-		nPass = sc.next();
-		try{
-		//if(aux!=-1){			
-			if(this.users.get(aux).authentic(nPass)){
-				System.out.println(this.users.get(aux).getName() + " logado.");
-				this.currentUser = this.users.get(aux);
-				this.currentIndex = aux;
-			}		
-		}catch(IndexOutOfBoundsException e){
-			System.err.println("login invalido.\n");
-		}
-		//}
-		
+		nPass = sc.next();	
+		if(this.users.get(aux).authentic(nPass)){
+			System.out.println(this.users.get(aux).getName() + " logado.");
+			this.currentUser = this.users.get(aux);
+			this.currentIndex = aux;
+		}		
 	}
 	public void homepage(){
 		int option = 3;
@@ -84,8 +77,10 @@ public class FSystem {
 				try{
 				login();
 				userPanel();
+				}catch(IndexOutOfBoundsException e){
+					System.err.println("login invalido.\n");
 				} catch(NullPointerException e){
-					System.err.println("Login ou senha incorreto.\n");
+					System.err.println("Senha incorreta.\n");
 				}
 				
 				break;
@@ -413,8 +408,13 @@ public class FSystem {
 								System.out.println("\nMensagem enviada!\n");
 								break;
 							case 7:
-								curr.removeAll();
-								this.communities.remove(id);
+								try{
+									curr.removeAll();
+									this.communities.remove(id);
+									op = 0;
+								}catch(IndexOutOfBoundsException e){
+									System.err.println(id);
+								}
 								break;
 							case 0: break;
 								
@@ -502,17 +502,24 @@ public class FSystem {
 		String aux, text;
 		do{
 			System.out.println("\n-- "+currentUser.getName()+" --");
-			System.out.println("1 - Exibir mensagens");
-			System.out.println("2 - Enviar mensagem");
+			System.out.println("1 - Exibir conversa com um usuario");
+			System.out.println("2 - Exibir todas as mensagens");
+			System.out.println("3 - Enviar mensagem");
 			System.out.println("0 - Voltar");
 			
 			try{
 				op = sc.nextInt();
 				switch(op){
 				case 1:
-					currentUser.showMessages();
+					System.out.println("Digite o nome do usuario:");
+					sc.nextLine();
+					aux = sc.nextLine();
+					currentUser.conversation(aux);
 					break;
 				case 2:
+					currentUser.showMessages();
+					break;
+				case 3:
 					System.out.println("Digite o nome do destino:");
 					sc.nextLine();
 					aux = sc.nextLine();
@@ -589,7 +596,11 @@ public class FSystem {
 				file = new FileWriter(new File(dir, "friends"));
 				writeFile = new PrintWriter(file);
 				for(i=0; i<this.users.size(); i++){
-					writeFile.println(this.users.get(i).fprintFriends());
+					if(this.users.get(i).hasFriends()){
+						writeFile.println(i);
+						writeFile.println(this.users.get(i).fprintFriends());
+					}
+					
 				}
 				file.close();
 				writeFile.close();
@@ -597,7 +608,10 @@ public class FSystem {
 				file = new FileWriter(new File(dir, "messagebox"));
 				writeFile = new PrintWriter(file);
 				for(i=0; i<this.users.size(); i++){
-					writeFile.println(this.users.get(i).fprintMessageBox());
+					if(users.get(i).hasMessages() || users.get(i).hasRequest()){
+						writeFile.println(i);
+						writeFile.println(this.users.get(i).fprintMessageBox());
+					}
 				}
 				file.close();
 				writeFile.close();
@@ -615,7 +629,8 @@ public class FSystem {
 			if(!dir.mkdir() ){
 				//Abrindo users
 				FileReader file = new FileReader(new File(dir, "users"));
-				BufferedReader readFile = new BufferedReader(file);
+				BufferedReader readFile;
+				readFile = new BufferedReader(file);
 				String line1,line2,line3,line4;
 				do{				
 					line1 = readFile.readLine();
@@ -639,23 +654,23 @@ public class FSystem {
 					n = Integer.parseInt(line3);
 					line3 = readFile.readLine();
 					n--;
-					Community c = new Community(line1, users.get(searchByName(line3)));
+					Community comm = new Community(line1, users.get(searchByName(line3)));
 					while(n>0){
 						line4 = readFile.readLine();
-						c.addMember(users.get(searchByName(line4)));
+						comm.addMember(users.get(searchByName(line4)));
 						n--;
 					}
-					c.setDescription(line2);
+					comm.setDescription(line2);
 					line3 = readFile.readLine();
 					n = Integer.parseInt(line3);
 					while(n>0){
 						line2 = readFile.readLine();
 						line4 = readFile.readLine();
-						c.receiveMessage(new Message(users.get(searchByName(line2)), null, line4));
+						comm.receiveMessage(new Message(users.get(searchByName(line2)), null, line4));
 						n--;
 					}
 					
-					communities.add(c);
+					communities.add(comm);
 					
 				}while(line1!=null);
 				file.close();
@@ -669,17 +684,20 @@ public class FSystem {
 				do{
 					line1 = readFile.readLine();
 					if(line1 == null) break;
-					n = Integer.parseInt(line1);
+					i = Integer.parseInt(line1);
+					line2 = readFile.readLine();
+					n = Integer.parseInt(line2);
 					while(n>0){
-						line2 = readFile.readLine();
-						User friend = this.users.get(this.searchByName(line2));
+						line3 = readFile.readLine();
+						User friend = this.users.get(this.searchByName(line3));
 						this.users.get(i).newFriend(friend);
 						n--;
 					}
-					i++;
 				}while(line1!=null);
 				file.close();
 				readFile.close();
+				line1 = null;
+				
 				//Abrindo messagebox
 				file = new FileReader(new File(dir, "messagebox"));
 				readFile = new BufferedReader(file);
@@ -687,12 +705,17 @@ public class FSystem {
 				do{
 					line1 = readFile.readLine();
 					if(line1 == null) break;
+					i = Integer.parseInt(line1);
+					line1 = readFile.readLine();
 					n = Integer.parseInt(line1);
 					while(n>0){
 						line2 = readFile.readLine();
 						line3 = readFile.readLine();
 						line4 = readFile.readLine();	
-						Message msg = new Message(users.get(this.searchByName(line2)), users.get(this.searchByName(line3)), line4);
+						Message msg;
+						if(line2.equals(users.get(i).getName())){
+							msg = new Message(users.get(i), users.get(this.searchByName(line3)), line4);
+						} else msg = new Message( users.get(this.searchByName(line2)), users.get(i), line4);
 						this.users.get(i).sendMessage(msg);
 						n--;
 					}
@@ -703,9 +726,7 @@ public class FSystem {
 						this.users.get(i).request(users.get(this.searchByName(line3)));
 						n--;
 					}
-					i++;
-				}while(line1!=null);
-				
+				}while(line1!=null);				
 			}
 			
 		} catch (IOException e) {
@@ -715,6 +736,5 @@ public class FSystem {
 		} catch (NumberFormatException e){
 			e.printStackTrace();
 		}
-	}
-	
+	}	
 }

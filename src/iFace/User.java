@@ -5,7 +5,6 @@ public class User {
 	private String name;
 	private String email;
 	private String password;
-	int id;
 	private ArrayList<User> friends;
 	private ArrayList<Message> messages;
 	private ArrayList<Community> communities;
@@ -43,15 +42,13 @@ public class User {
 		System.out.println("Email: "+this.email);
 		System.out.println("Numero de amigos: "+this.friends.size());
 		System.out.println("Numero de comunidades: "+this.communities.size());
-	}
-	
+	}	
 	public void listFriends(){
 		if(this.friends.size() == 0) System.out.println("Nenhum amigo.");
 		for(int i=0; i<this.friends.size(); i++){
 			System.out.println(this.friends.get(i).getName());
 		}
-	}
-	
+	}	
 	public void request(User user){
 		this.requests.add(new Message(user, this, "Enviou uma solicitação de amizade."));
 	}
@@ -62,8 +59,13 @@ public class User {
 		if(!this.isFriend(user)){
 			this.newFriend(user);
 			user.newFriend(this);
-		}
-		
+		}		
+	}
+	public boolean hasFriends(){
+		return (this.friends.size() > 0);
+	}
+	public boolean hasMessages(){
+		return (this.messages.size() > 0);
 	}
 	public boolean hasRequest(){
 		return (this.requests.size() >0);
@@ -143,6 +145,18 @@ public class User {
 			this.messages.get(i).show();
 			//System.out.println("\n");
 		}
+	}
+	public void conversation(String name){
+		Message current;
+		boolean hasMessage = false;
+		for (int i=0; i<this.messages.size(); i++){
+			current = this.messages.get(i);
+			if(current.getOrigination().getName().equals(name)||current.getDestination().getName().equals(name)){
+				hasMessage = true;
+				current.show();
+			}
+		}
+		if(!hasMessage) System.out.println("Nenhuma mensagem para mostrar.\n");
 	}
 	public void sendMessage(Message message){
 		this.messages.add(message);
